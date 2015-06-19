@@ -1436,6 +1436,7 @@ function useAbilities(level)
 	if(level >= CONTROL.speedThreshold && levelRainingMod === 0) {
 		enableAbility(ABILITIES.NAPALM);
 		enableAbility(ABILITIES.TACTICAL_NUKE);
+		enableAbility(ABILITIES.LIKE_NEW);
 
 		advLog('Trying to trigger cooldown and wormhole...', 1);
 

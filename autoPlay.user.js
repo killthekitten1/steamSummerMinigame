@@ -1437,11 +1437,15 @@ function useAbilities(level)
 		enableAbility(ABILITIES.NAPALM);
 		enableAbility(ABILITIES.TACTICAL_NUKE);
 		enableAbility(ABILITIES.LIKE_NEW);
+		enableAbility(ABILITIES.CLUSTER_BOMB);
 
 		advLog('Trying to trigger cooldown and wormhole...', 1);
 
 		tryUsingAbility(ABILITIES.CLUSTER_BOMB, true);
-		tryUsingAbility(ABILITIES.TACTICAL_NUKE, false, true);
+		tryUsingAbility(ABILITIES.NAPALM, true);
+		tryUsingAbility(ABILITIES.TACTICAL_NUKE, true);
+		tryUsingAbility(ABILITIES.LIKE_NEW, true);
+		
 
 		// Chance of using at least one like new with X active script users
 		if(Math.random() <= 0.05) {

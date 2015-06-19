@@ -131,18 +131,7 @@ var ENEMY_TYPE = {
 };
 
 var BOSS_DISABLED_ABILITIES = [
-	ABILITIES.MORALE_BOOSTER,
-	ABILITIES.GOOD_LUCK_CHARMS,
-	ABILITIES.TACTICAL_NUKE,
-	ABILITIES.CLUSTER_BOMB,
-	ABILITIES.NAPALM,
-	ABILITIES.CRIT,
-	ABILITIES.CRIPPLE_SPAWNER,
-	ABILITIES.CRIPPLE_MONSTER,
-	ABILITIES.MAX_ELEMENTAL_DAMAGE,
-	ABILITIES.REFLECT_DAMAGE,
-	ABILITIES.STEAL_HEALTH,
-	ABILITIES.THROW_MONEY_AT_SCREEN
+	ABILITIES.WORMHOLE
 ];
 
 var CONTROL = {
@@ -472,7 +461,7 @@ function MainLoop() {
 				var numSecondsToKill = enemy.m_data.max_hp / (currentCrit * 20 * 1500);
 				// If it would take less than a day to kill the boss, disable clicking
 				if(numSecondsToKill < 24 * 60 * 60) {
-					absoluteCurrentClickRate = 0;
+					absoluteCurrentClickRate = 20;
 				}
 			}
 
@@ -555,11 +544,11 @@ function useAutoBadgePurchase() {
 	// id = ability
 	// ratio = how much of the remaining badges to spend
 	var abilityPriorityList = [
-		{ id: ABILITIES.WORMHOLE,   ratio: 0.9 },
-		{ id: ABILITIES.LIKE_NEW,   ratio: 1 },
-		{ id: ABILITIES.CRIT,       ratio: 1 },
-		{ id: ABILITIES.TREASURE,   ratio: 1 },
-		{ id: ABILITIES.PUMPED_UP,  ratio: 1 },
+		{ id: ABILITIES.WORMHOLE,   ratio: 0 },
+		{ id: ABILITIES.LIKE_NEW,   ratio: 0 },
+		{ id: ABILITIES.CRIT,       ratio: 0.5 },
+		{ id: ABILITIES.TREASURE,   ratio: 0 },
+		{ id: ABILITIES.PUMPED_UP,  ratio: 0.5 },
 	];
 
 	var badgePoints = s().m_rgPlayerTechTree.badge_points;
@@ -1445,17 +1434,17 @@ function useAbilities(level)
 
 	// Wormhole
 	if(level >= CONTROL.speedThreshold && levelRainingMod === 0) {
-		enableAbility(ABILITIES.WORMHOLE);
-		enableAbility(ABILITIES.LIKE_NEW);
+		enableAbility(ABILITIES.NAPALM);
+		enableAbility(ABILITIES.TACTICAL_NUKE);
 
 		advLog('Trying to trigger cooldown and wormhole...', 1);
 
-		tryUsingAbility(ABILITIES.DECREASE_COOLDOWNS, true);
-		tryUsingAbility(ABILITIES.WORMHOLE, false, true);
+		tryUsingAbility(ABILITIES.CLUSTER_BOMB, true);
+		tryUsingAbility(ABILITIES.TACTICAL_NUKE, false, true);
 
 		// Chance of using at least one like new with X active script users
 		if(Math.random() <= 0.05) {
-			tryUsingAbility(ABILITIES.LIKE_NEW, false, true);
+			tryUsingAbility(ABILITIES.NAPALM, false, true);
 		}
 
 		// Exit right now so we don't use any other abilities after wormhole
@@ -1463,13 +1452,6 @@ function useAbilities(level)
 	} else {
 		disableAbility(ABILITIES.WORMHOLE);
 		disableAbility(ABILITIES.LIKE_NEW);
-	}
-
-	// Skip doing any damage x levels before upcoming wormhole round
-	if(!enableOffensiveAbilities || CONTROL.rainingSafeRounds >= (CONTROL.rainingRounds - levelRainingMod)) {
-		tryUsingAbility(ABILITIES.RESURRECTION, true);
-
-		return;
 	}
 
 	// Cripple Monster

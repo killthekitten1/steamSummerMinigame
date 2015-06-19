@@ -545,10 +545,10 @@ function useAutoBadgePurchase() {
 	// ratio = how much of the remaining badges to spend
 	var abilityPriorityList = [
 		{ id: ABILITIES.WORMHOLE,   ratio: 0 },
-		{ id: ABILITIES.LIKE_NEW,   ratio: 0.25 },
-		{ id: ABILITIES.CRIT,       ratio: 0.25 },
-		{ id: ABILITIES.TREASURE,   ratio: 0.25 },
-		{ id: ABILITIES.PUMPED_UP,  ratio: 0.25 },
+		{ id: ABILITIES.LIKE_NEW,   ratio: 1 },
+		{ id: ABILITIES.CRIT,       ratio: 0 },
+		{ id: ABILITIES.TREASURE,   ratio: 0 },
+		{ id: ABILITIES.PUMPED_UP,  ratio: 0 },
 	];
 
 	var badgePoints = s().m_rgPlayerTechTree.badge_points;

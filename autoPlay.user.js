@@ -1445,13 +1445,13 @@ function useAbilities(level)
 		// Chance of using at least one like new with X active script users
 		if(Math.random() <= 0.05) {
 			tryUsingAbility(ABILITIES.NAPALM, false, true);
+			tryUsingAbility(ABILITIES.LIKE_NEW, false, true);
 		}
 
 		// Exit right now so we don't use any other abilities after wormhole
 		return;
 	} else {
 		disableAbility(ABILITIES.WORMHOLE);
-		disableAbility(ABILITIES.LIKE_NEW);
 	}
 
 	// Cripple Monster

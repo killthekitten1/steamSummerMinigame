@@ -1434,9 +1434,9 @@ function useAbilities(level)
 
 	// Wormhole
 	if(level >= CONTROL.speedThreshold && levelRainingMod === 0) {
-		enableAbility(ABILITIES.NAPALM);
-		enableAbility(ABILITIES.TACTICAL_NUKE);
 		enableAbility(ABILITIES.LIKE_NEW);
+		enableAbility(ABILITIES.TACTICAL_NUKE);
+		enableAbility(ABILITIES.NAPALM);
 		enableAbility(ABILITIES.CLUSTER_BOMB);
 
 		advLog('Trying to trigger cooldown and wormhole...', 1);
@@ -1449,8 +1449,10 @@ function useAbilities(level)
 
 		// Chance of using at least one like new with X active script users
 		if(Math.random() <= 0.05) {
-			tryUsingAbility(ABILITIES.NAPALM, false, true);
 			tryUsingAbility(ABILITIES.LIKE_NEW, false, true);
+			tryUsingAbility(ABILITIES.NAPALM, false, true);
+			tryUsingAbility(ABILITIES.TACTICAL_NUKE, true);
+			tryUsingAbility(ABILITIES.CLUSTER_BOMB, true);
 		}
 
 		// Exit right now so we don't use any other abilities after wormhole

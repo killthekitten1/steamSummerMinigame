@@ -1,13 +1,11 @@
 // ==UserScript==
-// @name [SteamDB] Monster Minigame Script
-// @namespace https://github.com/SteamDatabase/steamSummerMinigame
+// @name Monster2
+// @namespace https://github.com/killthekitten/steamSummerMinigame
 // @description A script that runs the Steam Monster Minigame for you.
-// @version 5.1.0
+// @version 1.0.7
 // @match *://steamcommunity.com/minigame/towerattack*
 // @match *://steamcommunity.com//minigame/towerattack*
 // @grant none
-// @updateURL https://raw.githubusercontent.com/SteamDatabase/steamSummerMinigame/master/autoPlay.user.js
-// @downloadURL https://raw.githubusercontent.com/SteamDatabase/steamSummerMinigame/master/autoPlay.user.js
 // ==/UserScript==
 
 // IMPORTANT: Update the @version property above to a higher number such as 1.1 and 1.2 when you update the script! Otherwise, Tamper / Greasemonkey users will not update automatically.
@@ -131,18 +129,6 @@ var ENEMY_TYPE = {
 };
 
 var BOSS_DISABLED_ABILITIES = [
-	ABILITIES.MORALE_BOOSTER,
-	ABILITIES.GOOD_LUCK_CHARMS,
-	ABILITIES.TACTICAL_NUKE,
-	ABILITIES.CLUSTER_BOMB,
-	ABILITIES.NAPALM,
-	ABILITIES.CRIT,
-	ABILITIES.CRIPPLE_SPAWNER,
-	ABILITIES.CRIPPLE_MONSTER,
-	ABILITIES.MAX_ELEMENTAL_DAMAGE,
-	ABILITIES.REFLECT_DAMAGE,
-	ABILITIES.STEAL_HEALTH,
-	ABILITIES.THROW_MONEY_AT_SCREEN
 ];
 
 var CONTROL = {
@@ -421,17 +407,14 @@ function MainLoop() {
 	if (!isAlreadyRunning) {
 		isAlreadyRunning = true;
 
+		
+		//s().TryChangeLane(1);
+		//s().TryChangeTarget(0);
 		goToLaneWithBestTarget(level);
-
-		attemptRespawn();
 
 		var timeLeft = getTimeleft(); // Time left in minutes
 
-		if(timeLeft <= 5) {
-			useAllAbilities();
-		} else {
-			useAbilities(level);
-		}
+		useAbilities(level);
 
 		updatePlayersInGame();
 
@@ -472,7 +455,7 @@ function MainLoop() {
 				var numSecondsToKill = enemy.m_data.max_hp / (currentCrit * 20 * 1500);
 				// If it would take less than a day to kill the boss, disable clicking
 				if(numSecondsToKill < 24 * 60 * 60) {
-					absoluteCurrentClickRate = 0;
+					absoluteCurrentClickRate = 20;
 				}
 			}
 
@@ -555,11 +538,11 @@ function useAutoBadgePurchase() {
 	// id = ability
 	// ratio = how much of the remaining badges to spend
 	var abilityPriorityList = [
-		{ id: ABILITIES.WORMHOLE,   ratio: 0.9 },
-		{ id: ABILITIES.LIKE_NEW,   ratio: 1 },
-		{ id: ABILITIES.CRIT,       ratio: 1 },
-		{ id: ABILITIES.TREASURE,   ratio: 1 },
-		{ id: ABILITIES.PUMPED_UP,  ratio: 1 },
+		{ id: ABILITIES.WORMHOLE,   ratio: 0.25 },
+		{ id: ABILITIES.LIKE_NEW,   ratio: 0.55 },
+		{ id: ABILITIES.CRIPPLE_MONSTER,       ratio: 0.1 },
+		{ id: ABILITIES.CRIPPLE_SPAWNER,   ratio: 0.09 },
+		{ id: ABILITIES.CRIT,  ratio: 0.01 },
 	];
 
 	var badgePoints = s().m_rgPlayerTechTree.badge_points;
@@ -643,10 +626,7 @@ function useAutoUpgrade() {
 	}
 
 	var upg_order = [
-		UPGRADES.ARMOR_PIERCING_ROUND,
 		UPGRADES.LIGHT_ARMOR,
-		UPGRADES.AUTO_FIRE_CANNON,
-		UPGRADES.LUCKY_SHOT,
 	];
 	if(enableAutoUpgradeElemental && ELEMENTS.LockedElement !== -1) { upg_order.push(ELEMENTS.LockedElement+3); }
 	var upg_map = {};
@@ -1315,20 +1295,6 @@ function goToLaneWithBestTarget(level) {
 	}
 
 	var levelRainingMod = level % CONTROL.rainingRounds;
-
-	// Prevent attack abilities and items if up against a boss or treasure minion
-	if (targetIsTreasure || (level < CONTROL.speedThreshold || levelRainingMod === 0 || CONTROL.rainingSafeRounds >= (CONTROL.rainingRounds - levelRainingMod))) {
-		BOSS_DISABLED_ABILITIES.forEach(disableAbility);
-	} else {
-		BOSS_DISABLED_ABILITIES.forEach(enableAbility);
-	}
-
-	// Disable raining gold for the first levels
-	if(level < CONTROL.rainingRounds) {
-		disableAbility(ABILITIES.RAINING_GOLD);
-	} else {
-		enableAbility(ABILITIES.RAINING_GOLD);
-	}
 }
 
 function hasMaxCriticalOnLane() {
@@ -1356,291 +1322,118 @@ function useAbilities(level)
 	var enemy = false;
 	var enemyBossHealthPercent = 0;
 
-	// Medic & Pumped Up
-	if (tryUsingAbility(ABILITIES.PUMPED_UP)){
-		// Pumped Up is purchased, cooled down, and needed. Trigger it.
-		advLog('Pumped up is always good.', 2);
-	}
-	else
-	{
-		// check if Medics is purchased and cooled down
-		if (tryUsingAbility(ABILITIES.MEDICS)) {
-			advLog('BadMedic is purchased, cooled down. Trigger it.', 2);
-		}
-
-		if(level > 5000 && tryUsingAbility(ABILITIES.REFLECT_DAMAGE)) {
-			advLog('We have reflect damage, cooled down. Trigger it.', 2);
-		}
-		else if(level > 2500 && tryUsingAbility(ABILITIES.STEAL_HEALTH)) {
-			advLog('We have steal health, cooled down. Trigger it.', 2);
-		}
-		else if (tryUsingAbility(ABILITIES.GOD_MODE)) {
-			advLog('We have god mode, cooled down. Trigger it.', 2);
-		}
-
-	}
 
 	var levelRainingMod = level % CONTROL.rainingRounds;
+	var levelPreRain = (level+1) % CONTROL.rainingRounds;
+	var levelRainMinTwo = (level+2) % CONTROL.rainingRounds;
+	var levelRainMinThree = (level+3) % CONTROL.rainingRounds;
 
-	// Gold Rain
-	if (canUseAbility(ABILITIES.RAINING_GOLD)) {
-		// only use if the speed threshold has not been reached,
-		// or it's a designated gold round after the threshold
-		if (level > CONTROL.disableGoldRainLevels && (level < CONTROL.speedThreshold || level % CONTROL.rainingRounds === 0)) {
-			enemy = s().GetEnemy(s().m_rgPlayerData.current_lane, s().m_rgPlayerData.target);
-			// check if current target is a boss, otherwise its not worth using the gold rain
-			if (enemy && enemy.m_data.type == ENEMY_TYPE.BOSS) {
-				enemyBossHealthPercent = enemy.m_flDisplayedHP / enemy.m_data.max_hp;
-
-				if (enemyBossHealthPercent >= 0.6 || level % CONTROL.rainingRounds === 0) { // We want sufficient time for the gold rain to be applicable
-					// Gold Rain is purchased, cooled down, and needed. Trigger it.
-					advLog('Gold rain is purchased and cooled down, Triggering it on boss', 2);
-					triggerAbility(ABILITIES.RAINING_GOLD);
-				}
-			}
-		}
+	
+	
+	if(levelRainMinTwo === 0) {
+		advLog("XBOT: level: " + level + " Boss-2, use wormhole",1);
+			
+		enableAbility(ABILITIES.WORMHOLE);
+		enableAbility(ABILITIES.LIKE_NEW);
+		
+		triggerAbility(ABILITIES.LIKE_NEW);
+		triggerAbility(ABILITIES.WORMHOLE);
+		
+		triggerAbility(ABILITIES.LIKE_NEW);
+		triggerAbility(ABILITIES.WORMHOLE);
+		
+		triggerAbility(ABILITIES.LIKE_NEW);
+		triggerAbility(ABILITIES.WORMHOLE);
+		
+		triggerAbility(ABILITIES.LIKE_NEW);
+		triggerAbility(ABILITIES.WORMHOLE);
+		
+	}
+	
+	
+	if(levelRainMinThree === 0) {
+		advLog("XBOT: level: " + level + " Boss-3, use wormhole",1);
+			
+		enableAbility(ABILITIES.WORMHOLE);
+		enableAbility(ABILITIES.LIKE_NEW);
+		
+		triggerAbility(ABILITIES.LIKE_NEW);
+		triggerAbility(ABILITIES.WORMHOLE);
+		
+		triggerAbility(ABILITIES.LIKE_NEW);
+		triggerAbility(ABILITIES.WORMHOLE);
+		
+		triggerAbility(ABILITIES.LIKE_NEW);
+		triggerAbility(ABILITIES.WORMHOLE);
+		
+		triggerAbility(ABILITIES.LIKE_NEW);
+		triggerAbility(ABILITIES.WORMHOLE);
+		
+		triggerAbility(ABILITIES.LIKE_NEW);
+		triggerAbility(ABILITIES.WORMHOLE);
+		
+	}
+	
+	if(levelPreRain === 0) {
+		advLog("XBOT: level: " + level + " Boss-1, use wormhole",1);
+		enableAbility(ABILITIES.WORMHOLE);
+		enableAbility(ABILITIES.LIKE_NEW);
+		
+		triggerAbility(ABILITIES.LIKE_NEW);
+		triggerAbility(ABILITIES.WORMHOLE);
+		
+		triggerAbility(ABILITIES.LIKE_NEW);
+		triggerAbility(ABILITIES.WORMHOLE);
+		
 	}
 
-	// Metal Detector
-	if(canUseAbility(ABILITIES.METAL_DETECTOR)) {
-
-		enemy = s().GetEnemy(s().m_rgPlayerData.current_lane, s().m_rgPlayerData.target);
-		// check if current target is a boss, otherwise we won't use metal detector
-		if (enemy && enemy.m_data.type == ENEMY_TYPE.BOSS) {
-			enemyBossHealthPercent = enemy.m_flDisplayedHP / enemy.m_data.max_hp;
-
-			// we want to use metal detector at 25% hp, or even less
-			if (enemyBossHealthPercent <= 0.25) { // We want sufficient time for the metal detector to be applicable
-				// Metal Detector is purchased, cooled down, and needed. Trigger it.
-				advLog('Metal Detector is purchased and cooled down, Triggering it on boss', 2);
-				triggerAbility(ABILITIES.METAL_DETECTOR);
-			}
-		}
-	}
-
-	// Treasure
-	if (canUseAbility(ABILITIES.TREASURE)) {
-
-		// check if current level is higher than 50
-		if (level > 50) {
-			enemy = s().GetTargetedEnemy();
-			// check if current target is a boss, otherwise we won't use metal detector
-			if (enemy && enemy.type == ENEMY_TYPE.BOSS) {
-				enemyBossHealthPercent = enemy.hp / enemy.max_hp;
-
-				// we want to use Treasure at 25% hp, or even less
-				if (enemyBossHealthPercent <= 0.25) { // We want sufficient time for the metal detector to be applicable
-					// Treasure is purchased, cooled down, and needed. Trigger it.
-					advLog('Treasure is purchased and cooled down, triggering it.', 2);
-					triggerAbility(ABILITIES.TREASURE);
-				}
-			}
-		}
-		else {
-			// Treasure is purchased, cooled down, and needed. Trigger it.
-			advLog('Treasure is purchased and cooled down, triggering it.', 2);
-			triggerAbility(ABILITIES.TREASURE);
-		}
-	}
 
 	// Wormhole
 	if(level >= CONTROL.speedThreshold && levelRainingMod === 0) {
-		enableAbility(ABILITIES.WORMHOLE);
+		advLog("XBOT: level: " + level + " Boss, use nuke, napalm, cluster bomb and cripple monster/spawner",1);
+		enableAbility(ABILITIES.NAPALM);
+		enableAbility(ABILITIES.CRIT);
+		enableAbility(ABILITIES.TACTICAL_NUKE);
 		enableAbility(ABILITIES.LIKE_NEW);
-
-		advLog('Trying to trigger cooldown and wormhole...', 1);
-
-		tryUsingAbility(ABILITIES.DECREASE_COOLDOWNS, true);
-		tryUsingAbility(ABILITIES.WORMHOLE, false, true);
-
-		// Chance of using at least one like new with X active script users
-		if(Math.random() <= 0.05) {
-			tryUsingAbility(ABILITIES.LIKE_NEW, false, true);
-		}
-
+		enableAbility(ABILITIES.CLUSTER_BOMB);
+        enableAbility(ABILITIES.CRIPPLE_MONSTER);
+        enableAbility(ABILITIES.CRIPPLE_SPAWNER);
+				
+		triggerAbility(ABILITIES.LIKE_NEW);
+		triggerAbility(ABILITIES.CRIT);
+		triggerAbility(ABILITIES.CLUSTER_BOMB);
+		triggerAbility(ABILITIES.TACTICAL_NUKE);
+        triggerAbility(ABILITIES.CRIPPLE_MONSTER);
+        triggerAbility(ABILITIES.CRIPPLE_SPAWNER);
+		triggerAbility(ABILITIES.CRIT);
+		
+		triggerAbility(ABILITIES.LIKE_NEW);
+		triggerAbility(ABILITIES.CRIT);
+		triggerAbility(ABILITIES.NAPALM);
+		triggerAbility(ABILITIES.CLUSTER_BOMB);
+		triggerAbility(ABILITIES.TACTICAL_NUKE);
+        triggerAbility(ABILITIES.CRIPPLE_MONSTER);
+        triggerAbility(ABILITIES.CRIPPLE_SPAWNER);
+		
+		
+		triggerAbility(ABILITIES.LIKE_NEW);
+		triggerAbility(ABILITIES.CRIT);
+		triggerAbility(ABILITIES.NAPALM);
+		triggerAbility(ABILITIES.CLUSTER_BOMB);
+		triggerAbility(ABILITIES.TACTICAL_NUKE);
+        triggerAbility(ABILITIES.CRIPPLE_MONSTER);
+        triggerAbility(ABILITIES.CRIPPLE_SPAWNER);
+		
+		triggerAbility(ABILITIES.LIKE_NEW);
+		triggerAbility(ABILITIES.CRIT);
+		triggerAbility(ABILITIES.NAPALM);
+		triggerAbility(ABILITIES.CLUSTER_BOMB);
+		triggerAbility(ABILITIES.TACTICAL_NUKE);
+        triggerAbility(ABILITIES.CRIPPLE_MONSTER);
+        triggerAbility(ABILITIES.CRIPPLE_SPAWNER);
+		
 		// Exit right now so we don't use any other abilities after wormhole
 		return;
-	} else {
-		disableAbility(ABILITIES.WORMHOLE);
-		disableAbility(ABILITIES.LIKE_NEW);
-	}
-
-	// Skip doing any damage x levels before upcoming wormhole round
-	if(!enableOffensiveAbilities || CONTROL.rainingSafeRounds >= (CONTROL.rainingRounds - levelRainingMod)) {
-		tryUsingAbility(ABILITIES.RESURRECTION, true);
-
-		return;
-	}
-
-	// Cripple Monster
-	if(canUseAbility(ABILITIES.CRIPPLE_MONSTER)) {
-		if (level >= CONTROL.speedThreshold && level % CONTROL.rainingRounds !== 0 && level % 10 === 0) {
-			enemy = s().GetEnemy(s().m_rgPlayerData.current_lane, s().m_rgPlayerData.target);
-			if (enemy && enemy.m_data.type == ENEMY_TYPE.BOSS) {
-				enemyBossHealthPercent = enemy.m_flDisplayedHP / enemy.m_data.max_hp;
-				if (enemyBossHealthPercent>0.5){
-					advLog("Cripple Monster available and used on boss", 2);
-					triggerAbility(ABILITIES.CRIPPLE_MONSTER);
-				}
-			}
-		}
-	}
-
-	// Good Luck Charms / Crit
-	if(!hasMaxCriticalOnLane())
-	{
-		if (tryUsingAbility(ABILITIES.CRIT)){
-			// Crits is purchased, cooled down, and needed. Trigger it.
-			advLog('Crit chance is always good.', 3);
-		}
-	}
-	if(!hasMaxCriticalOnLane())
-	{
-		// check if Good Luck Charms is purchased and cooled down
-		if (tryUsingAbility(ABILITIES.GOOD_LUCK_CHARMS)) {
-			advLog('Good Luck Charms is purchased, cooled down, and needed. Trigger it.', 2);
-		}
-	}
-
-	// Cluster Bomb
-	if (canUseAbility(ABILITIES.CLUSTER_BOMB)) {
-	//Check lane has monsters to explode
-		enemyCount = 0;
-		enemySpawnerExists = false;
-		//Count each slot in lane
-		for (i = 0; i < 4; i++) {
-			enemy = s().GetEnemy(currentLane, i);
-			if (enemy) {
-				enemyCount++;
-				if (enemy.m_data.type === 0) {
-					enemySpawnerExists = true;
-				}
-			}
-		}
-		//Bombs away if spawner and 2+ other monsters
-		if (enemySpawnerExists && enemyCount >= 3) {
-			if (!tryUsingAbility(ABILITIES.DECREASE_COOLDOWNS, true)) {
-				triggerAbility(ABILITIES.CLUSTER_BOMB);
-			}
-		}
-	}
-
-	// Napalm
-	if (canUseAbility(ABILITIES.NAPALM)) {
-		//Check lane has monsters to burn
-		enemyCount = 0;
-		enemySpawnerExists = false;
-		//Count each slot in lane
-		for (i = 0; i < 4; i++) {
-			enemy = s().GetEnemy(currentLane, i);
-			if (enemy) {
-				enemyCount++;
-				if (enemy.m_data.type === 0) {
-					enemySpawnerExists = true;
-				}
-			}
-		}
-		//Burn them all if spawner and 2+ other monsters
-		if (enemySpawnerExists && enemyCount >= 3) {
-			if (!tryUsingAbility(ABILITIES.DECREASE_COOLDOWNS, true)) {
-				triggerAbility(ABILITIES.NAPALM);
-			}
-		}
-	}
-
-	// Morale Booster
-	if (canUseAbility(ABILITIES.MORALE_BOOSTER)) {
-		var numberOfWorthwhileEnemies = 0;
-		for(i = 0; i < s().m_rgGameData.lanes[s().m_nExpectedLane].enemies.length; i++) {
-			//Worthwhile enemy is when an enamy has a current hp value of at least 1,000,000
-			if(s().m_rgGameData.lanes[s().m_nExpectedLane].enemies[i].hp > 1000000) {
-				numberOfWorthwhileEnemies++;
-			}
-		}
-
-		if(numberOfWorthwhileEnemies >= 2) {
-			// Moral Booster is purchased, cooled down, and needed. Trigger it.
-			advLog('Moral Booster is purchased, cooled down, and needed. Trigger it.', 2);
-			triggerAbility(ABILITIES.MORALE_BOOSTER);
-		}
-	}
-
-	// Tactical Nuke
-	if(canUseAbility(ABILITIES.TACTICAL_NUKE)) {
-		enemy = s().GetEnemy(s().m_rgPlayerData.current_lane, s().m_rgPlayerData.target);
-		// check whether current target is a boss
-		if (enemy && enemy.m_data.type == ENEMY_TYPE.BOSS) {
-			if (level >= CONTROL.speedThreshold) { // Start nuking bosses at level CONTROL.speedThreshold
-				enemyBossHealthPercent = enemy.m_flDisplayedHP / enemy.m_data.max_hp;
-
-				// Use Nuke on boss with >= 50% HP but only if Raining Gold is not active in the lane
-				if (enemyBossHealthPercent >= 0.5 && getActiveAbilityLaneCount(ABILITIES.RAINING_GOLD) <= 0) {
-					if (!tryUsingAbility(ABILITIES.DECREASE_COOLDOWNS, true)) {
-						advLog("Tactical Nuke is purchased, cooled down, and needed. Nuke 'em.", 2);
-						triggerAbility(ABILITIES.TACTICAL_NUKE);
-					}
-				}
-			}
-		}
-		else {
-			//Check that the lane has a spawner and record it's health percentage
-			//Count each slot in lane
-			for (i = 0; i < 4; i++) {
-				enemy = s().GetEnemy(currentLane, i);
-				if (enemy && enemy.m_data.type == ENEMY_TYPE.SPAWNER) {
-					enemySpawnerHealthPercent = enemy.m_flDisplayedHP / enemy.m_data.max_hp;
-					// If there is a spawner and it's health is between 60% and 30%, nuke it!
-					if (enemySpawnerHealthPercent < 0.6 && enemySpawnerHealthPercent > 0.3) {
-						if (!tryUsingAbility(ABILITIES.DECREASE_COOLDOWNS, true)) {
-							advLog("Tactical Nuke is purchased, cooled down, and needed. Nuke 'em.", 2);
-							triggerAbility(ABILITIES.TACTICAL_NUKE);
-						}
-					}
-					break; // No reason to continue the loop after finding a spawner
-				}
-			}
-		}
-	}
-
-	// Cripple Spawner
-	if(canUseAbility(ABILITIES.CRIPPLE_SPAWNER)) {
-		//Check that the lane has a spawner and record it's health percentage
-		enemySpawnerExists = false;
-		enemySpawnerHealthPercent = 0.0;
-		//Count each slot in lane
-		for (i = 0; i < 4; i++) {
-			enemy = s().GetEnemy(currentLane, i);
-			if (enemy) {
-				if (enemy.m_data.type === 0) {
-					enemySpawnerExists = true;
-					enemySpawnerHealthPercent = enemy.m_flDisplayedHP / enemy.m_data.max_hp;
-				}
-			}
-		}
-
-		// If there is a spawner and it's health is above 95%, cripple it!
-		if (enemySpawnerExists && enemySpawnerHealthPercent > 0.95) {
-			advLog("Cripple Spawner available, and needed. Cripple 'em.", 2);
-			triggerAbility(ABILITIES.CRIPPLE_SPAWNER);
-		}
-	}
-
-	// Max Elemental
-	if (tryUsingAbility(ABILITIES.MAX_ELEMENTAL_DAMAGE, true)) {
-		// Max Elemental Damage is purchased, cooled down, and needed. Trigger it.
-		advLog('Max Elemental Damage is purchased and cooled down, triggering it.', 2);
-	}
-
-	// Resurrect
-	if(level % 10 === 9 && tryUsingAbility(ABILITIES.RESURRECTION)) {
-		// Resurrect is purchased and we are using it.
-		advLog('Triggered Resurrect.');
-	}
-}
-
-function attemptRespawn() {
-	if ((s().m_bIsDead) && ((s().m_rgPlayerData.time_died) + 5) < (s().m_nTime)) {
-		w.RespawnPlayer();
 	}
 }
 

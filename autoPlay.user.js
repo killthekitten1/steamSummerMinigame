@@ -2,7 +2,7 @@
 // @name Monster2
 // @namespace https://github.com/killthekitten/steamSummerMinigame
 // @description A script that runs the Steam Monster Minigame for you.
-// @version 1.0.6
+// @version 1.0.7
 // @match *://steamcommunity.com/minigame/towerattack*
 // @match *://steamcommunity.com//minigame/towerattack*
 // @grant none
@@ -132,7 +132,7 @@ var BOSS_DISABLED_ABILITIES = [
 ];
 
 var CONTROL = {
-	speedThreshold: 100,
+	speedThreshold: 200,
 	rainingRounds: 100,
 	disableGoldRainLevels: 500,
 	rainingSafeRounds: 10
@@ -566,8 +566,6 @@ function useAutoBadgePurchase() {
 
 	s().m_rgPurchaseItemsQueue = abilityPurchaseQueue;
 	s().m_UI.UpdateSpendBadgePointsDialog();
-	
-	advLog("XBOT: Buy thingies");
 }
 
 function toggleAutoBadgePurchase(event) {

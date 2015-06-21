@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name Monster2
-// @namespace https://github.com/killthekitten/steamSummerMinigame
+// @namespace https://github.com/killthekitten1/steamSummerMinigame
 // @description A script that runs the Steam Monster Minigame for you.
-// @version 1.0.7
+// @version 1.0.8
 // @match *://steamcommunity.com/minigame/towerattack*
 // @match *://steamcommunity.com//minigame/towerattack*
 // @grant none
@@ -132,7 +132,7 @@ var BOSS_DISABLED_ABILITIES = [
 ];
 
 var CONTROL = {
-	speedThreshold: 200,
+	speedThreshold: 196,
 	rainingRounds: 100,
 	disableGoldRainLevels: 500,
 	rainingSafeRounds: 10
@@ -446,18 +446,6 @@ function MainLoop() {
 			var levelRainingMod = level % CONTROL.rainingRounds;
 
 			absoluteCurrentClickRate = currentClickRate;
-			// Disable autoclicking if DPS would be too high against a boss (doubtful but possible?)
-			// Doesn't do very good DPS calculation (ignores crit chance / elem mult) 
-			// but should still be very generous
-			if (level >= CONTROL.speedThreshold && levelRainingMod === 0 && enemy && enemy.m_data.type == ENEMY_TYPE.BOSS) {
-				var currentCritMultiplier = s().m_rgPlayerTechTree.damage_multiplier_crit;
-				var currentCrit = s().m_rgPlayerTechTree.damage_per_click * currentCritMultiplier;
-				var numSecondsToKill = enemy.m_data.max_hp / (currentCrit * 20 * 1500);
-				// If it would take less than a day to kill the boss, disable clicking
-				if(numSecondsToKill < 24 * 60 * 60) {
-					absoluteCurrentClickRate = 20;
-				}
-			}
 
 			s().m_nClicks += absoluteCurrentClickRate;
 		}
@@ -538,8 +526,8 @@ function useAutoBadgePurchase() {
 	// id = ability
 	// ratio = how much of the remaining badges to spend
 	var abilityPriorityList = [
-		{ id: ABILITIES.WORMHOLE,   ratio: 0.25 },
-		{ id: ABILITIES.LIKE_NEW,   ratio: 0.55 },
+		{ id: ABILITIES.WORMHOLE,   ratio: 0.10 },
+		{ id: ABILITIES.LIKE_NEW,   ratio: 0.70 },
 		{ id: ABILITIES.CRIPPLE_MONSTER,       ratio: 0.1 },
 		{ id: ABILITIES.CRIPPLE_SPAWNER,   ratio: 0.09 },
 		{ id: ABILITIES.CRIT,  ratio: 0.01 },
@@ -1327,10 +1315,31 @@ function useAbilities(level)
 	var levelPreRain = (level+1) % CONTROL.rainingRounds;
 	var levelRainMinTwo = (level+2) % CONTROL.rainingRounds;
 	var levelRainMinThree = (level+3) % CONTROL.rainingRounds;
+	var levelRainMinFour = (level+4) % CONTROL.rainingRounds;
 
+	if(level >= CONTROL.speedThreshold && levelRainMinFour === 0) {
+		advLog("XBOT: level: " + level + " Boss-4, use wormhole",1);
+			
+		enableAbility(ABILITIES.WORMHOLE);
+		enableAbility(ABILITIES.LIKE_NEW);
+		
+		triggerAbility(ABILITIES.LIKE_NEW);
+		triggerAbility(ABILITIES.WORMHOLE);
+		
+		triggerAbility(ABILITIES.LIKE_NEW);
+		triggerAbility(ABILITIES.WORMHOLE);
+		
+		triggerAbility(ABILITIES.LIKE_NEW);
+		triggerAbility(ABILITIES.WORMHOLE);
+		
+		triggerAbility(ABILITIES.LIKE_NEW);
+		triggerAbility(ABILITIES.WORMHOLE);
+		
+		triggerAbility(ABILITIES.LIKE_NEW);
+		triggerAbility(ABILITIES.WORMHOLE);
+	}
 	
-	
-	if(levelRainMinTwo === 0) {
+	if(level >= CONTROL.speedThreshold && levelRainMinTwo === 0) {
 		advLog("XBOT: level: " + level + " Boss-2, use wormhole",1);
 			
 		enableAbility(ABILITIES.WORMHOLE);
@@ -1344,14 +1353,10 @@ function useAbilities(level)
 		
 		triggerAbility(ABILITIES.LIKE_NEW);
 		triggerAbility(ABILITIES.WORMHOLE);
-		
-		triggerAbility(ABILITIES.LIKE_NEW);
-		triggerAbility(ABILITIES.WORMHOLE);
-		
 	}
 	
 	
-	if(levelRainMinThree === 0) {
+	if(level >= CONTROL.speedThreshold && levelRainMinThree === 0) {
 		advLog("XBOT: level: " + level + " Boss-3, use wormhole",1);
 			
 		enableAbility(ABILITIES.WORMHOLE);
@@ -1364,17 +1369,13 @@ function useAbilities(level)
 		triggerAbility(ABILITIES.WORMHOLE);
 		
 		triggerAbility(ABILITIES.LIKE_NEW);
-		triggerAbility(ABILITIES.WORMHOLE);
+		triggerAbility(ABILITIES.WORMHOLE);	
 		
 		triggerAbility(ABILITIES.LIKE_NEW);
 		triggerAbility(ABILITIES.WORMHOLE);
-		
-		triggerAbility(ABILITIES.LIKE_NEW);
-		triggerAbility(ABILITIES.WORMHOLE);
-		
 	}
 	
-	if(levelPreRain === 0) {
+	if(level >= CONTROL.speedThreshold &&  levelPreRain === 0) {
 		advLog("XBOT: level: " + level + " Boss-1, use wormhole",1);
 		enableAbility(ABILITIES.WORMHOLE);
 		enableAbility(ABILITIES.LIKE_NEW);
@@ -1385,10 +1386,11 @@ function useAbilities(level)
 		triggerAbility(ABILITIES.LIKE_NEW);
 		triggerAbility(ABILITIES.WORMHOLE);
 		
+		
 	}
 
 
-	// Wormhole
+	// Kill the gold helm
 	if(level >= CONTROL.speedThreshold && levelRainingMod === 0) {
 		advLog("XBOT: level: " + level + " Boss, use nuke, napalm, cluster bomb and cripple monster/spawner",1);
 		enableAbility(ABILITIES.NAPALM);
@@ -1414,7 +1416,6 @@ function useAbilities(level)
 		triggerAbility(ABILITIES.TACTICAL_NUKE);
         triggerAbility(ABILITIES.CRIPPLE_MONSTER);
         triggerAbility(ABILITIES.CRIPPLE_SPAWNER);
-		
 		
 		triggerAbility(ABILITIES.LIKE_NEW);
 		triggerAbility(ABILITIES.CRIT);
